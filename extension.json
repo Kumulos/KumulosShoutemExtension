@@ -1,6 +1,6 @@
 {
   "name": "kumulos",
-  "version": "0.0.21",
+  "version": "0.0.23",
   "title": "Kumulos",
   "icon": "server/assets/kumulos-extension-cover.png",
   "description": "Kumulos provides audience and engagement analytics, marketing automation and geo-targeted notifications for your app.",

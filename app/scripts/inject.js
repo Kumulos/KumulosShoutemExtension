@@ -50,11 +50,18 @@ function injectIos() {
     consts.ios.podDeps
   );
 
+  inject(
+    podfilePath,
+    ANCHORS.IOS.PODFILE.EXTENSION_POSTINSTALL_TARGETS,
+    consts.ios.podTargets
+  );
+
   replace(
     appDelegatePath,
     consts.ios.findDelegateLine,
     consts.ios.replaceDelegateLine
   );
+
   replace(
     appDelegatePath,
     consts.ios.findDidLaunch,

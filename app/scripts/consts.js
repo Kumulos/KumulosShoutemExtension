@@ -135,7 +135,14 @@ const iOSPushDelegateCode = `
 module.exports = {
   ios: {
     podDeps: `
-  pod 'NearBee', '0.1.0'
+    pod 'NearBee', '0.1.0'
+`,
+    podTargets: `
+    if target.name == 'Starscream'
+        target.build_configurations.each do |config|
+            config.build_settings['SWIFT_VERSION'] = '4.2'
+        end
+    end
 `,
     delegateBody: `
 ${iOSLocationDelegateCode}

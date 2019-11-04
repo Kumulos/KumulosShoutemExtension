@@ -118,8 +118,8 @@ function injectAndroid() {
     ANCHORS.ANDROID.GRADLE.APP.DEPENDENCIES,
     `
     // Kumulos SDK start
-    debugImplementation 'com.kumulos.android:kumulos-android-debug:6.0.0-shoutem'
-    releaseImplementation 'com.kumulos.android:kumulos-android-release:6.0.0-shoutem'
+    debugImplementation 'com.kumulos.android:kumulos-android-debug:6.1.0'
+    releaseImplementation 'com.kumulos.android:kumulos-android-release:6.1.0'
 
     implementation 'co.nearbee:nearbeesdk:0.1.6'
     // Kumulos SDK end

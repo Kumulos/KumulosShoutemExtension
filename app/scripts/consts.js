@@ -99,7 +99,7 @@ const iOSPushDelegateCode = `
     NSString *url = userInfo[@"custom"][@"u"];
     if (url) {
       dispatch_async(dispatch_get_main_queue(), ^{
-        [self.nearBee displayContentOfEddystoneUrl:url];
+        [UIApplication.sharedApplication openURL:[NSURL URLWithString:url]];
       });
     }
 #endif
@@ -125,7 +125,15 @@ const iOSPushDelegateCode = `
   // Handle URL pushes
   NSString *url = userInfo[@"custom"][@"u"];
   if (url) {
-    [self.nearBee displayContentOfEddystoneUrl:url];
+    if (@available(iOS 10.0, *)) {
+      [UIApplication.sharedApplication openURL:[NSURL URLWithString:url] options:@{} completionHandler:^(BOOL success) {
+        /* noop */
+      }];
+    } else {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        [UIApplication.sharedApplication openURL:[NSURL URLWithString:url]];
+      });
+    }
   }
 
   completionHandler();

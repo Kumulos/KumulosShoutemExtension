@@ -3,7 +3,7 @@
   "version": "0.0.7",
   "description": "Testing",
   "dependencies": {
-    "kumulos-react-native": "2.1.0-shoutem",
+    "kumulos-react-native": "3.0.0",
     "xcode": "^0.8.9",
     "plist": "1.2.0",
     "lodash": "~4.17.4"

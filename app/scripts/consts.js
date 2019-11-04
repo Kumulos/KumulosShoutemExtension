@@ -47,7 +47,7 @@ const iOSLocationDelegateCode = `
 
 #pragma mark - NearBee delegates
 
-- (void)onBeaconsFound:(NSArray<NearBeeBeacon *> * _Nonnull)beacons {
+- (void)didFindBeacons:(NSArray<NearBeeBeacon *> * _Nonnull)beacons {
   for (NearBeeBeacon *beacon in beacons) {
     if (!beacon.eddystoneUID) {
       continue;
@@ -64,16 +64,20 @@ const iOSLocationDelegateCode = `
   }
 }
 
-- (void)onBeaconsLost:(NSArray<NearBeeBeacon *> * _Nonnull)beacons {
+- (void)didLoseBeacons:(NSArray<NearBeeBeacon *> * _Nonnull)beacons {
   // Noop
 }
 
-- (void)onBeaconsUpdated:(NSArray<NearBeeBeacon *> * _Nonnull)beacons {
-  // Noop
-}
-
-- (void)onError:(NSError * _Nonnull)error {
+- (void)didThrowError:(NSError * _Nonnull)error {
   NSLog(@"NearBee error: %@", error);
+}
+
+- (void)didUpdateBeacons:(NSArray<NearBeeBeacon *> * _Nonnull)beacons {
+  // Noop
+}
+
+- (void)didUpdateState:(enum NearBeeState)state {
+  // Noop
 }
 `;
 

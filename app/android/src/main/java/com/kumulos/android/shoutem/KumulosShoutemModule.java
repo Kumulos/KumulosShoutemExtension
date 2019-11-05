@@ -18,10 +18,10 @@ import com.kumulos.android.Kumulos;
 
 import java.util.ArrayList;
 
+import co.nearbee.NearBeaconListener;
 import co.nearbee.NearBee;
-import co.nearbee.NearBeeBeacon;
 import co.nearbee.NearBeeException;
-import co.nearbee.NearBeeListener;
+import co.nearbee.models.NearBeacon;
 
 public class KumulosShoutemModule extends ReactContextBaseJavaModule {
 
@@ -74,20 +74,20 @@ public class KumulosShoutemModule extends ReactContextBaseJavaModule {
                 .setBackgroundNotificationsEnabled(true);
         NearBee nearBee = builder.build();
 
-        nearBee.startScanning(new NearBeeListener() {
+        nearBee.startScanning(new NearBeaconListener() {
             @Override
-            public void onUpdate(ArrayList<NearBeeBeacon> beaconsInRange) {
+            public void onUpdate(ArrayList<NearBeacon> beaconsInRange) {
                 // Noop
             }
 
             @Override
-            public void onBeaconLost(ArrayList<NearBeeBeacon> lostBeacons) {
+            public void onBeaconLost(ArrayList<NearBeacon> lostBeacons) {
                 // Noop
             }
 
             @Override
-            public void onBeaconFound(ArrayList<NearBeeBeacon> foundBeacons) {
-                for (NearBeeBeacon beacon : foundBeacons) {
+            public void onBeaconFound(ArrayList<NearBeacon> foundBeacons) {
+                for (NearBeacon beacon : foundBeacons) {
                     String uid = beacon.getEddystoneUID();
                     String hexNamespace = uid.substring(0, 20);
                     String hexInstance = uid.substring(20);

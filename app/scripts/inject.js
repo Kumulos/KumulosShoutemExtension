@@ -196,7 +196,7 @@ function injectNearBeeRepo(gradlePath) {
     }
   }
 
-  if (insertIdx === lines.length - 1) {
+  if (insertIdx === lines.length) {
     return;
   }
 

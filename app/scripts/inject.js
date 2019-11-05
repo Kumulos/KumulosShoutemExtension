@@ -10,6 +10,7 @@ const {
 } = require("@shoutem/build-tools");
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
 
 const consts = require("./consts");
 const { getKumulosSettings } = require("./config");
@@ -83,9 +84,11 @@ function injectIos() {
 function injectAndroid() {
   const settings = getKumulosSettings();
 
+  const rootGradlePath = path.join(projectPath, "android", "build.gradle");
   const appGradlePath = getAppGradlePath({ cwd: projectPath });
   const appPath = getMainApplicationPath({ cwd: projectPath });
   // Gradle tweaks
+  injectNearBeeRepo(rootGradlePath);
   const nearBeeOrgId = settings ? settings.nearBeeOrgId || "" : "";
   const nearBeeApiKey = settings ? settings.nearBeeApiKey || "" : "";
   inject(
@@ -121,7 +124,7 @@ function injectAndroid() {
     debugImplementation 'com.kumulos.android:kumulos-android-debug:6.1.0'
     releaseImplementation 'com.kumulos.android:kumulos-android-release:6.1.0'
 
-    implementation 'co.nearbee:nearbeesdk:0.1.6'
+    implementation 'co.nearbee:nearbeesdk:0.2.1'
     // Kumulos SDK end
   `
   );
@@ -168,6 +171,42 @@ function writeGoogleServicesFile(settings) {
   const androidAppDir = path.join(projectPath, "android", "app");
   const outFile = path.join(androidAppDir, "google-services.json");
   fs.writeFileSync(outFile, settings.fcmGoogleServicesJson);
+}
+
+function injectNearBeeRepo(gradlePath) {
+  const beaconstacMavenUrl = "https://dl.bintray.com/mobstac/maven";
+  const contents = fs.readFileSync(gradlePath, { encoding: "utf-8" });
+
+  if (contents.indexOf(beaconstacMavenUrl) > -1) {
+    return;
+  }
+
+  const lines = contents.split(os.EOL);
+
+  let insertIdx = 0;
+  const lookFor = ["allprojects", "repositories"];
+  for (insertIdx; insertIdx < lines.length; insertIdx++) {
+    const line = lines[insertIdx];
+    if (line.indexOf(lookFor[0]) > -1) {
+      lookFor.shift();
+    }
+
+    if (!lookFor.length) {
+      break;
+    }
+  }
+
+  if (insertIdx === lines.length - 1) {
+    return;
+  }
+
+  lines.splice(
+    insertIdx + 1,
+    0,
+    `        maven { url  "${beaconstacMavenUrl}" }`
+  );
+
+  fs.writeFileSync(gradlePath, lines.join(os.EOL), { encoding: "utf-8" });
 }
 
 function injectKumulos() {

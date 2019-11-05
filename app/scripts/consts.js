@@ -114,7 +114,7 @@ const iOSPushDelegateCode = `
 
 // Called on iOS10 when your app is in the foreground to allow customizing the display of the notification
 - (void) userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions))completionHandler {
-  completionHandler(UNNotificationPresentationOptionNone);
+  completionHandler(UNNotificationPresentationOptionAlert);
 }
 
 // iOS10 handler for when a user taps a notification

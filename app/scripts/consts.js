@@ -147,7 +147,7 @@ const iOSPushDelegateCode = `
 module.exports = {
   ios: {
     podDeps: `
-    pod 'NearBee', '0.2.0'
+    pod 'NearBee', '0.2.1'
 `,
     delegateBody: `
 ${iOSLocationDelegateCode}

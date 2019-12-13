@@ -47,7 +47,7 @@ const iOSLocationDelegateCode = `
 
 #pragma mark - NearBee delegates
 
-- (void)onBeaconsFound:(NSArray<NearBeeBeacon *> * _Nonnull)beacons {
+- (void)didFindBeacons:(NSArray<NearBeeBeacon *> * _Nonnull)beacons {
   for (NearBeeBeacon *beacon in beacons) {
     if (!beacon.eddystoneUID) {
       continue;
@@ -64,16 +64,20 @@ const iOSLocationDelegateCode = `
   }
 }
 
-- (void)onBeaconsLost:(NSArray<NearBeeBeacon *> * _Nonnull)beacons {
+- (void)didLoseBeacons:(NSArray<NearBeeBeacon *> * _Nonnull)beacons {
   // Noop
 }
 
-- (void)onBeaconsUpdated:(NSArray<NearBeeBeacon *> * _Nonnull)beacons {
-  // Noop
-}
-
-- (void)onError:(NSError * _Nonnull)error {
+- (void)didThrowError:(NSError * _Nonnull)error {
   NSLog(@"NearBee error: %@", error);
+}
+
+- (void)didUpdateBeacons:(NSArray<NearBeeBeacon *> * _Nonnull)beacons {
+  // Noop
+}
+
+- (void)didUpdateState:(enum NearBeeState)state {
+  // Noop
 }
 `;
 
@@ -99,7 +103,7 @@ const iOSPushDelegateCode = `
     NSString *url = userInfo[@"custom"][@"u"];
     if (url) {
       dispatch_async(dispatch_get_main_queue(), ^{
-        [self.nearBee displayContentOfEddystoneUrl:url];
+        [UIApplication.sharedApplication openURL:[NSURL URLWithString:url]];
       });
     }
 #endif
@@ -110,7 +114,7 @@ const iOSPushDelegateCode = `
 
 // Called on iOS10 when your app is in the foreground to allow customizing the display of the notification
 - (void) userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions))completionHandler {
-  completionHandler(UNNotificationPresentationOptionNone);
+  completionHandler(UNNotificationPresentationOptionAlert);
 }
 
 // iOS10 handler for when a user taps a notification
@@ -125,7 +129,15 @@ const iOSPushDelegateCode = `
   // Handle URL pushes
   NSString *url = userInfo[@"custom"][@"u"];
   if (url) {
-    [self.nearBee displayContentOfEddystoneUrl:url];
+    if (@available(iOS 10.0, *)) {
+      [UIApplication.sharedApplication openURL:[NSURL URLWithString:url] options:@{} completionHandler:^(BOOL success) {
+        /* noop */
+      }];
+    } else {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        [UIApplication.sharedApplication openURL:[NSURL URLWithString:url]];
+      });
+    }
   }
 
   completionHandler();
@@ -135,7 +147,7 @@ const iOSPushDelegateCode = `
 module.exports = {
   ios: {
     podDeps: `
-  pod 'NearBee', '0.1.0'
+    pod 'NearBee', '0.2.3'
 `,
     delegateBody: `
 ${iOSLocationDelegateCode}

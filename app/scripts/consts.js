@@ -165,13 +165,6 @@ ${iOSPushDelegateCode}
 @implementation AppDelegate
 `,
     findDidLaunch: `return YES;`,
-    replaceDidLaunch: `
-  [self setupLocationMonitoring:launchOptions];
-  [[UNUserNotificationCenter currentNotificationCenter] setDelegate:self];
-  [Kumulos.shared pushRequestDeviceToken];
-
-  return YES;
-`,
     delegateImports: `
 @import CoreLocation;
 @import UserNotifications;

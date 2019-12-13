@@ -57,17 +57,28 @@ function injectIos() {
     consts.ios.replaceDelegateLine
   );
 
-  replace(
-    appDelegatePath,
-    consts.ios.findDidLaunch,
-    consts.ios.replaceDidLaunch
-  );
-
   const settings = getKumulosSettings();
   if (!settingsValid(settings)) {
     console.error("Kumulos settings not found, skipping iOS config");
     return;
   }
+
+  // init code
+  const apiKey = settings.apiKey || "";
+  const secretKey = settings.secretKey || "";
+  replace(
+    appDelegatePath,
+    consts.ios.findDidLaunch,
+    `
+  KSConfig *kumulosConfig = [KSConfig configWithAPIKey:@"${apiKey}" andSecretKey:@"${secretKey}"];
+  [Kumulos initializeWithConfig:kumulosConfig];
+  [self setupLocationMonitoring:launchOptions];
+  [[UNUserNotificationCenter currentNotificationCenter] setDelegate:self];
+  [Kumulos.shared pushRequestDeviceToken];
+
+  return YES;
+`
+  );
 
   mergeKumulosPlist();
   // Inject iBeacon vendor UUID

@@ -9,7 +9,7 @@ function getKumulosSettings() {
     throw "Kumulos extension not included in appConfig.json, aborting!";
   }
 
-  return kumulos.attributes.settings;
+  return kumulos.attributes.settings || {};
 }
 
 module.exports = {

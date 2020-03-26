@@ -55,6 +55,7 @@ function injectIos() {
     consts.ios.findDelegateLine,
     consts.ios.replaceDelegateLine
   );
+
   replace(
     appDelegatePath,
     consts.ios.findDidLaunch,

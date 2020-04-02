@@ -3,14 +3,12 @@
   "version": "3.0.0",
   "description": "Official Kumulos integration for the Shoutem platform",
   "dependencies": {
-    "kumulos-react-native": "3.0.0",
+    "kumulos-react-native": "4.0.0-shoutem1",
     "xcode": "^0.8.9",
     "plist": "1.2.0",
     "lodash": "~4.17.4"
   },
-  "rnpm": {
-    "commands": {
-      "postlink": "node node_modules/kumulos.kumulos/scripts/postlink.js"
-    }
-  }
+  "nativeDependencies": [
+    "kumulos-react-native"
+  ]
 }

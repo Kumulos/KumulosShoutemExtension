@@ -99,6 +99,13 @@ function injectAndroid() {
   const appGradlePath = getAppGradlePath({ cwd: projectPath });
   const appPath = getMainApplicationPath({ cwd: projectPath });
   // Gradle tweaks
+  inject(
+    rootGradlePath,
+    ANCHORS.ANDROID.GRADLE.ROOT_GRADLE,
+    `
+  classpath 'com.google.gms:google-services:3.0.0'
+  `
+  );
   injectNearBeeRepo(rootGradlePath);
   const nearBeeOrgId = settings ? settings.nearBeeOrgId || "" : "";
   const nearBeeApiKey = settings ? settings.nearBeeApiKey || "" : "";

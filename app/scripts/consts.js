@@ -9,6 +9,13 @@ const iOSLocationDelegateCode = `
   CLAuthorizationStatus status = [CLLocationManager authorizationStatus];
 
   if (kCLAuthorizationStatusNotDetermined == status) {
+    if (@available(iOS 13.0, *)) {
+      [self.lm requestWhenInUseAuthorization];
+    } else {
+      [self.lm requestAlwaysAuthorization];
+    }
+  }
+  else if (kCLAuthorizationStatusAuthorizedWhenInUse == status) {
     [self.lm requestAlwaysAuthorization];
   }
   else if (kCLAuthorizationStatusAuthorizedAlways == status) {
@@ -27,7 +34,10 @@ const iOSLocationDelegateCode = `
 }
 
 - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
-  if (kCLAuthorizationStatusAuthorizedAlways == status) {
+  if (kCLAuthorizationStatusAuthorizedWhenInUse == status) {
+    [self.lm requestAlwaysAuthorization];
+  }
+  else if (kCLAuthorizationStatusAuthorizedAlways == status) {
     [self startLocationMonitoring];
   }
   else {

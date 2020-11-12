@@ -6,7 +6,7 @@ const {
   inject,
   replace,
   ANCHORS,
-  projectPath
+  projectPath,
 } = require("@shoutem/build-tools");
 const path = require("path");
 const fs = require("fs");
@@ -26,7 +26,7 @@ function settingsValid(settings) {
 const {
   getProjectInfoPlist,
   writePlist,
-  mergeKumulosPlist
+  mergeKumulosPlist,
 } = require("./plist-helper");
 
 function injectIos() {
@@ -73,7 +73,6 @@ function injectIos() {
   KSConfig *kumulosConfig = [KSConfig configWithAPIKey:@"${apiKey}" andSecretKey:@"${secretKey}"];
   [Kumulos initializeWithConfig:kumulosConfig];
   [self setupLocationMonitoring:launchOptions];
-  [[UNUserNotificationCenter currentNotificationCenter] setDelegate:self];
   [Kumulos.shared pushRequestDeviceToken];
 
   return YES;
@@ -233,5 +232,5 @@ function injectKumulos() {
 }
 
 module.exports = {
-  injectKumulos
+  injectKumulos,
 };

@@ -81,69 +81,6 @@ const iOSLocationDelegateCode = `
 }
 `;
 
-const iOSPushDelegateCode = `
-#pragma mark - Push delegates
-- (void) application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
-  if (Kumulos.shared) {
-    [Kumulos.shared pushRegisterWithDeviceToken:deviceToken];
-  }
-  else {
-    NSLog(@"Kumulos.shared was nil didRegisterForRemoteNotificationsWithDeviceToken");
-  }
-}
-
-// iOS9 handler for push notifications
-// iOS9+10 handler for background data pushes (content-available)
-- (void) application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
-  if ([[UIApplication sharedApplication] applicationState] == UIApplicationStateInactive) {
-    [Kumulos.shared pushTrackOpenFromNotification:userInfo];
-
-#ifndef __IPHONE_10_0
-    // Handle opening URLs on notification taps (iOS9)
-    NSString *url = userInfo[@"custom"][@"u"];
-    if (url) {
-      dispatch_async(dispatch_get_main_queue(), ^{
-        [UIApplication.sharedApplication openURL:[NSURL URLWithString:url]];
-      });
-    }
-#endif
-  }
-
-  completionHandler(UIBackgroundFetchResultNoData);
-}
-
-// Called on iOS10 when your app is in the foreground to allow customizing the display of the notification
-- (void) userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions))completionHandler {
-  completionHandler(UNNotificationPresentationOptionAlert);
-}
-
-// iOS10 handler for when a user taps a notification
-#ifdef __IPHONE_11_0
-- (void) userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)(void))completionHandler {
-#else
-- (void) userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)())completionHandler {
-#endif
-  NSDictionary* userInfo = [[[[response notification] request] content] userInfo];
-  [Kumulos.shared pushTrackOpenFromNotification:userInfo];
-
-  // Handle URL pushes
-  NSString *url = userInfo[@"custom"][@"u"];
-  if (url) {
-    if (@available(iOS 10.0, *)) {
-      [UIApplication.sharedApplication openURL:[NSURL URLWithString:url] options:@{} completionHandler:^(BOOL success) {
-        /* noop */
-      }];
-    } else {
-      dispatch_async(dispatch_get_main_queue(), ^{
-        [UIApplication.sharedApplication openURL:[NSURL URLWithString:url]];
-      });
-    }
-  }
-
-  completionHandler();
-}
-`;
-
 module.exports = {
   ios: {
     podDeps: `
@@ -151,11 +88,10 @@ module.exports = {
 `,
     delegateBody: `
 ${iOSLocationDelegateCode}
-${iOSPushDelegateCode}
 `,
     findDelegateLine: `@implementation AppDelegate`,
     replaceDelegateLine: `
-@interface AppDelegate () <UNUserNotificationCenterDelegate, CLLocationManagerDelegate, NearBeeDelegate>
+@interface AppDelegate () <CLLocationManagerDelegate, NearBeeDelegate>
 
 @property (nonatomic, strong) CLLocationManager *lm;
 @property (nonatomic, strong) NearBee *nearBee;
@@ -167,10 +103,9 @@ ${iOSPushDelegateCode}
     findDidLaunch: `return YES;`,
     delegateImports: `
 @import CoreLocation;
-@import UserNotifications;
-#import "KumulosSDK.h"
+#import <KumulosSDK/KumulosSDK.h>
 #import <NearBee/NearBee-Swift.h>
-`
+`,
   },
-  android: {}
+  android: {},
 };

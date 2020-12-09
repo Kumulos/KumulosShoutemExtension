@@ -1,4 +1,10 @@
-import { NativeModules, PermissionsAndroid, Platform } from "react-native";
+import {
+  Alert,
+  Linking,
+  NativeModules,
+  PermissionsAndroid,
+  Platform,
+} from "react-native";
 
 import Kumulos from "kumulos-react-native";
 import { ext } from "./const";
@@ -31,7 +37,7 @@ export function appDidFinishLaunching(app) {
 
   Kumulos.initialize({
     apiKey: settings.apiKey,
-    secretKey: settings.secretKey
+    secretKey: settings.secretKey,
   });
 
   if ("android" === Platform.OS) {
@@ -40,6 +46,16 @@ export function appDidFinishLaunching(app) {
 }
 
 async function setupLocationTrackingAndroid() {
+  if (Platform.Version < 29) {
+    requestLocationPermAndroid9Below();
+  } else if (Platform.Version === 29) {
+    requestLocationPermAndroid10();
+  } else {
+    requestLocationPermAndroid11Plus();
+  }
+}
+
+async function requestLocationPermAndroid() {
   let result;
   try {
     result = await PermissionsAndroid.request(
@@ -47,7 +63,40 @@ async function setupLocationTrackingAndroid() {
       {
         title: "Location-based Content",
         message:
-          "This app would like to use your location to enable relevant content and functionality"
+          "This app would like to use your location to enable relevant content and functionality",
+      }
+    );
+  } catch (e) {
+    console.error(e);
+    return false;
+  }
+
+  return PermissionsAndroid.RESULTS.GRANTED === result;
+}
+
+async function requestLocationPermAndroid9Below() {
+  const granted = await requestLocationPermAndroid();
+
+  if (granted) {
+    NativeModules.KumulosShoutem.startLocationTracking();
+  }
+}
+
+async function requestLocationPermAndroid10() {
+  const granted = await requestLocationPermAndroid();
+
+  if (!granted) {
+    return;
+  }
+
+  let result;
+  try {
+    result = await PermissionsAndroid.request(
+      "android.permission.ACCESS_BACKGROUND_LOCATION",
+      {
+        title: "Location-based Content",
+        message:
+          "This app would like to use your location to enable relevant content and functionality",
       }
     );
   } catch (e) {
@@ -60,4 +109,32 @@ async function setupLocationTrackingAndroid() {
   }
 
   NativeModules.KumulosShoutem.startLocationTracking();
+}
+
+async function requestLocationPermAndroid11Plus() {
+  await requestLocationPermAndroid();
+
+  const backgroundGranted = await PermissionsAndroid.check(
+    "android.permission.ACCESS_BACKGROUND_LOCATION"
+  );
+
+  if (!backgroundGranted) {
+    Alert.alert(
+      "Location-based Content",
+      "Please allow location access all the time in the app's settings to enable relevant content and functionality",
+      [
+        {
+          text: "Maybe Later",
+          style: "cancel",
+        },
+        {
+          text: "Open Settings",
+          onPress: () => Linking.openSettings(),
+        },
+      ],
+      { cancelable: false }
+    );
+  } else {
+    NativeModules.KumulosShoutem.startLocationTracking();
+  }
 }

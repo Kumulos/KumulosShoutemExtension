@@ -1,5 +1,6 @@
 import {
   Alert,
+  AppState,
   Linking,
   NativeModules,
   PermissionsAndroid,
@@ -9,6 +10,9 @@ import {
 import Kumulos from "kumulos-react-native";
 import { ext } from "./const";
 import { getExtensionSettings } from "shoutem.application";
+
+const ANDROID_BG_LOCATION_PERM =
+  "android.permission.ACCESS_BACKGROUND_LOCATION";
 
 // Constants `screens` (from extension.js) and `reducer` (from index.js)
 // are exported via named export
@@ -46,26 +50,43 @@ export function appDidFinishLaunching(app) {
 }
 
 async function setupLocationTrackingAndroid() {
+  const hasBasicLocationPerm = await requestLocationPerm(
+    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+  );
+
+  if (!hasBasicLocationPerm) {
+    requestLocationSettings();
+    return;
+  }
+
   if (Platform.Version < 29) {
-    requestLocationPermAndroid9Below();
-  } else if (Platform.Version === 29) {
-    requestLocationPermAndroid10();
+    NativeModules.KumulosShoutem.startLocationTracking();
+    return;
+  }
+
+  let backgroundGranted = await PermissionsAndroid.check(
+    ANDROID_BG_LOCATION_PERM
+  );
+
+  if (!backgroundGranted && Platform.Version === 29) {
+    backgroundGranted = await requestLocationPerm(ANDROID_BG_LOCATION_PERM);
+  }
+
+  if (!backgroundGranted) {
+    requestLocationSettings();
   } else {
-    requestLocationPermAndroid11Plus();
+    NativeModules.KumulosShoutem.startLocationTracking();
   }
 }
 
-async function requestLocationPermAndroid() {
+async function requestLocationPerm(perm) {
   let result;
   try {
-    result = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      {
-        title: "Location-based Content",
-        message:
-          "This app would like to use your location to enable relevant content and functionality",
-      }
-    );
+    result = await PermissionsAndroid.request(perm, {
+      title: "Location-based Content",
+      message:
+        "This app would like to use your location to enable relevant content and functionality",
+    });
   } catch (e) {
     console.error(e);
     return false;
@@ -74,67 +95,42 @@ async function requestLocationPermAndroid() {
   return PermissionsAndroid.RESULTS.GRANTED === result;
 }
 
-async function requestLocationPermAndroid9Below() {
-  const granted = await requestLocationPermAndroid();
-
-  if (granted) {
-    NativeModules.KumulosShoutem.startLocationTracking();
+async function onAppStateChanged(state) {
+  if ("active" !== state) {
+    return;
   }
-}
 
-async function requestLocationPermAndroid10() {
-  const granted = await requestLocationPermAndroid();
+  let perm = ANDROID_BG_LOCATION_PERM;
+  if (Platform.Version < 29) {
+    perm = PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION;
+  }
+
+  const granted = await PermissionsAndroid.check(perm);
 
   if (!granted) {
     return;
   }
 
-  let result;
-  try {
-    result = await PermissionsAndroid.request(
-      "android.permission.ACCESS_BACKGROUND_LOCATION",
-      {
-        title: "Location-based Content",
-        message:
-          "This app would like to use your location to enable relevant content and functionality",
-      }
-    );
-  } catch (e) {
-    console.error(e);
-    return;
-  }
-
-  if (PermissionsAndroid.RESULTS.GRANTED !== result) {
-    return;
-  }
-
   NativeModules.KumulosShoutem.startLocationTracking();
+  AppState.removeEventListener("change", onAppStateChanged);
 }
 
-async function requestLocationPermAndroid11Plus() {
-  await requestLocationPermAndroid();
+function requestLocationSettings() {
+  AppState.addEventListener("change", onAppStateChanged);
 
-  const backgroundGranted = await PermissionsAndroid.check(
-    "android.permission.ACCESS_BACKGROUND_LOCATION"
+  Alert.alert(
+    "Location-based Content",
+    "Please allow location access all the time in the app's settings to enable relevant content and functionality",
+    [
+      {
+        text: "Maybe Later",
+        style: "cancel",
+      },
+      {
+        text: "Open Settings",
+        onPress: () => Linking.openSettings(),
+      },
+    ],
+    { cancelable: false }
   );
-
-  if (!backgroundGranted) {
-    Alert.alert(
-      "Location-based Content",
-      "Please allow location access all the time in the app's settings to enable relevant content and functionality",
-      [
-        {
-          text: "Maybe Later",
-          style: "cancel",
-        },
-        {
-          text: "Open Settings",
-          onPress: () => Linking.openSettings(),
-        },
-      ],
-      { cancelable: false }
-    );
-  } else {
-    NativeModules.KumulosShoutem.startLocationTracking();
-  }
 }

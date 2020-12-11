@@ -11,7 +11,7 @@
 
     <application>
         <!-- Kumulos FCM handler -->
-        <service android:name=".KumulosShoutemFcmService">
+        <service android:name="com.kumulos.android.FirebaseMessagingService" android:exported="false">
             <intent-filter android:priority="100">
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>

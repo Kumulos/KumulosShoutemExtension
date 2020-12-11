@@ -114,12 +114,13 @@ public class KumulosShoutemModule extends ReactContextBaseJavaModule {
 
         Bundle meta = info.metaData;
         String key = meta.getString("co.nearbee.api_key", "");
-        int org = meta.getInt("co.nearbee.organization_id", -1);
-
-        if (TextUtils.isEmpty(key) || -1 == org) {
-            return false;
+        int org = -1;
+        try {
+            org = Integer.parseInt(meta.getString("co.nearbee.organization_id", ""));
+        } catch (NumberFormatException e) {
+            // Noop
         }
 
-        return true;
+        return !TextUtils.isEmpty(key) && -1 != org;
     }
 }

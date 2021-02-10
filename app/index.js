@@ -3,6 +3,7 @@ import { initMiddleware, logoutMiddleware } from "./middleware";
 
 import Kumulos from "kumulos-react-native";
 import { Platform } from "react-native";
+import { createPushOpenedHandler } from "./push";
 import { ext } from "./const";
 import { getExtensionSettings } from "shoutem.application";
 import { getUser } from "shoutem.auth";
@@ -35,9 +36,12 @@ export function appDidFinishLaunching(app) {
     return;
   }
 
+  const pushOpenedHandler = createPushOpenedHandler(store);
+
   Kumulos.initialize({
     apiKey: settings.apiKey,
     secretKey: settings.secretKey,
+    pushOpenedHandler,
   });
 
   if ("android" === Platform.OS) {

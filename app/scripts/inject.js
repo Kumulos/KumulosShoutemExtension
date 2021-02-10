@@ -71,7 +71,7 @@ function injectIos() {
     consts.ios.findDidLaunch,
     `
   KSConfig *kumulosConfig = [KSConfig configWithAPIKey:@"${apiKey}" andSecretKey:@"${secretKey}"];
-  [Kumulos initializeWithConfig:kumulosConfig];
+  [KumulosReactNative initializeWithConfig:kumulosConfig];
   [self setupLocationMonitoring:launchOptions];
   [Kumulos.shared pushRequestDeviceToken];
 

@@ -113,7 +113,7 @@ ${iOSLocationDelegateCode}
     findDidLaunch: `return YES;`,
     delegateImports: `
 @import CoreLocation;
-#import <KumulosSDK/KumulosSDK.h>
+#import <KumulosReactNative/KumulosReactNative.h>
 #import <NearBee/NearBee-Swift.h>
 `,
   },

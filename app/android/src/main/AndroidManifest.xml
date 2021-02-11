@@ -17,13 +17,6 @@
             </intent-filter>
         </service>
 
-        <receiver android:name=".PushReceiver" android:exported="false">
-            <intent-filter>
-                <action android:name="com.kumulos.push.RECEIVED" />
-                <action android:name="com.kumulos.push.OPENED" />
-            </intent-filter>
-        </receiver>
-
         <receiver android:name=".LocationReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="com.kumulos.android.shoutem.LocationReceiver.PROCESS_UPDATE" />

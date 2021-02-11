@@ -138,8 +138,8 @@ function injectAndroid() {
     ANCHORS.ANDROID.GRADLE.APP.DEPENDENCIES,
     `
     // Kumulos SDK start
-    debugImplementation 'com.kumulos.android:kumulos-android-debug:6.1.0'
-    releaseImplementation 'com.kumulos.android:kumulos-android-release:6.1.0'
+    debugImplementation 'com.kumulos.android:kumulos-android-debug:9.0.0'
+    releaseImplementation 'com.kumulos.android:kumulos-android-release:9.0.0'
 
     implementation 'co.nearbee:nearbeesdk:0.2.1'
     // Kumulos SDK end
@@ -152,6 +152,7 @@ function injectAndroid() {
     `
 import com.kumulos.android.KumulosConfig;
 import com.kumulos.android.Kumulos;
+import com.kumulos.reactnative.KumulosReactNative;
 `
   );
 
@@ -176,7 +177,7 @@ import com.kumulos.android.Kumulos;
     ANCHORS.ANDROID.MAIN_APPLICATION.ON_CREATE_END,
     `
 KumulosConfig kcfg = new KumulosConfig.Builder("${apiKey}", "${secretKey}").build();
-Kumulos.initialize(this, kcfg);
+KumulosReactNative.initialize(this, kcfg);
 Kumulos.pushRegister(this);
   `
   );

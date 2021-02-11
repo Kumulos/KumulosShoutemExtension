@@ -176,8 +176,8 @@ import com.kumulos.reactnative.KumulosReactNative;
     appPath,
     ANCHORS.ANDROID.MAIN_APPLICATION.ON_CREATE_END,
     `
-KumulosConfig kcfg = new KumulosConfig.Builder("${apiKey}", "${secretKey}").build();
-KumulosReactNative.initialize(this, kcfg);
+KumulosConfig.Builder kCfgBuilder = new KumulosConfig.Builder("${apiKey}", "${secretKey}");
+KumulosReactNative.initialize(this, kCfgBuilder);
 Kumulos.pushRegister(this);
   `
   );

@@ -1,23 +1,26 @@
-import { PLACES_SCHEMA, PLACE_DETAILS_SCREEN } from "shoutem.places";
+import { find, getOne } from "@shoutem/redux-io";
 import { hasModalOpen, navigateTo, openInModal } from "shoutem.navigation";
 
-import { find } from "@shoutem/redux-io";
+const PLACES_SCHEMA = "shoutem.places.places";
+const PLACE_DETAILS_SCREEN = "shoutem.places.PlaceDetails";
 
 const NAVIGABLE_SCHEMAS = {
   "shoutem.places.places": PLACES_SCHEMA,
 };
 
 function resolveNavigationAction(store, place) {
-  console.log("Resolving navigation for place");
-  console.log(place);
+  const state = store.getState();
+
+  const alreadyHasModalOpen = hasModalOpen(state);
+  const navigatorFunc = alreadyHasModalOpen ? navigateTo : openInModal;
+
   const route = {
     screen: PLACE_DETAILS_SCREEN,
     props: { place },
   };
-  const state = store.getState();
-  const alreadyHasModalOpen = hasModalOpen(state);
-  const navigationAction = alreadyHasModalOpen ? navigateTo : openInModal;
-  return navigationAction(route);
+  const navigationAction = navigatorFunc(route);
+
+  return store.dispatch(navigationAction);
 }
 
 // Handles opens for Shoutem deep linking of the form:
@@ -34,20 +37,16 @@ function resolveNavigationAction(store, place) {
 //
 // Currently only the Places module is supported
 function handlePushOpen(store, notification) {
-  console.log("Opened notification =======================");
-  console.log(notification);
   const data = notification.data;
   const action = data ? data.action : undefined;
 
   if (!action) {
-    console.log("No action, abort");
     return;
   }
 
   const schema = NAVIGABLE_SCHEMAS[action.itemSchema];
 
   if (!schema) {
-    console.log("No schema, abort");
     return;
   }
 
@@ -57,8 +56,9 @@ function handlePushOpen(store, notification) {
         query: { "filter[id]": action.itemId },
       })
     )
-    .then(({ payload: { data } }) => {
-      resolveNavigationAction(store, data[0]);
+    .then(() => {
+      const place = getOne(action.itemId, store.getState(), schema);
+      resolveNavigationAction(store, place);
     })
     .catch((e) => console.error(e));
 }

@@ -1,6 +1,8 @@
 import { find, getOne } from "@shoutem/redux-io";
 import { hasModalOpen, navigateTo, openInModal } from "shoutem.navigation";
 
+import { authenticate } from "shoutem.auth";
+
 const PLACES_SCHEMA = "shoutem.places.places";
 const PLACE_DETAILS_SCREEN = "shoutem.places.PlaceDetails";
 
@@ -18,7 +20,9 @@ function resolveNavigationAction(store, place) {
     screen: PLACE_DETAILS_SCREEN,
     props: { place },
   };
-  const navigationAction = navigatorFunc(route);
+  const navigationAction = authenticate(() =>
+    store.dispatch(navigatorFunc(route))
+  );
 
   return store.dispatch(navigationAction);
 }

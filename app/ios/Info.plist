@@ -8,13 +8,10 @@
     <string>This app would like to use your location to enable relevant content and functionality</string>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>This app would like to use your location to enable relevant content and functionality</string>
-    <key>NSBluetoothPeripheralUsageDescription</key>
-    <string>This app would like to use your location to enable relevant content and functionality</string>
     <key>UIBackgroundModes</key>
     <array>
       <string>location</string>
       <string>remote-notification</string>
-      <string>bluetooth-central</string>
     </array>
   </dict>
 </plist>

@@ -1,7 +1,7 @@
 {
   "name": "kumulos",
   "title": "Kumulos",
-  "version": "4.0.2",
+  "version": "4.0.3",
   "platform": "2.5.*",
   "icon": "server/assets/kumulos-extension-cover.png",
   "description": "Kumulos provides audience and engagement analytics, marketing automation and geo-targeted notifications for your app.",
@@ -9,20 +9,12 @@
     {
       "name": "keys",
       "type": "react-page"
-    },
-    {
-      "name": "beacons",
-      "type": "react-page"
     }
   ],
   "settingsPages": [
     {
       "page": "@.keys",
       "title": "Keys"
-    },
-    {
-      "page": "@.beacons",
-      "title": "Beacons"
     }
   ]
 }

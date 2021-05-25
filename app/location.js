@@ -4,20 +4,32 @@ import {
   Linking,
   NativeModules,
   PermissionsAndroid,
-  Platform,
+  Platform
 } from "react-native";
 
 const ANDROID_BG_LOCATION_PERM =
   "android.permission.ACCESS_BACKGROUND_LOCATION";
+const LOCATION_RATIONALE = "This app collects location data to enable finding relevant places of interest nearby even when the app is closed or not in use.";
 
 export async function setupLocationTrackingAndroid() {
-  const hasBasicLocationPerm = await requestLocationPerm(
+  let hasBasicLocationPerm = await PermissionsAndroid.check(
     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
   );
 
+  let prominentDisclosureShown = false;
+
   if (!hasBasicLocationPerm) {
-    requestLocationSettings();
-    return;
+    await showProminentDisclosure();
+    prominentDisclosureShown = true;
+
+    hasBasicLocationPerm = await requestLocationPerm(
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+    );
+
+    if (!hasBasicLocationPerm) {
+      requestLocationSettings();
+      return;
+    }
   }
 
   if (Platform.Version < 29) {
@@ -29,7 +41,16 @@ export async function setupLocationTrackingAndroid() {
     ANDROID_BG_LOCATION_PERM
   );
 
-  if (!backgroundGranted && Platform.Version === 29) {
+  if (backgroundGranted) {
+    NativeModules.KumulosShoutem.startLocationTracking();
+    return;
+  }
+
+  if (Platform.Version === 29) {
+    if (!prominentDisclosureShown) {
+      await showProminentDisclosure();
+    }
+
     backgroundGranted = await requestLocationPerm(ANDROID_BG_LOCATION_PERM);
   }
 
@@ -45,8 +66,7 @@ async function requestLocationPerm(perm) {
   try {
     result = await PermissionsAndroid.request(perm, {
       title: "Location-based Content",
-      message:
-        "This app would like to use your location to enable relevant content and functionality",
+      message: LOCATION_RATIONALE
     });
   } catch (e) {
     console.error(e);
@@ -81,17 +101,33 @@ function requestLocationSettings() {
 
   Alert.alert(
     "Location-based Content",
-    "Please allow location access all the time in the app's settings to enable relevant content and functionality",
+    "Please allow 'all the time' location access in the app's permissions settings to enable relevant content and functionality",
     [
       {
         text: "Maybe Later",
-        style: "cancel",
+        style: "cancel"
       },
       {
         text: "Open Settings",
-        onPress: () => Linking.openSettings(),
-      },
+        onPress: () => Linking.openSettings()
+      }
     ],
     { cancelable: false }
   );
+}
+
+function showProminentDisclosure() {
+  return new Promise((resolve) => {
+    Alert.alert(
+      "Location-based Content",
+      LOCATION_RATIONALE,
+      [
+        {
+          text: "OK",
+          onPress: () => resolve()
+        }
+      ],
+      { cancelable: false }
+    );
+  });
 }

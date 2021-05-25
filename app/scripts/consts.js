@@ -9,6 +9,13 @@ const iOSLocationDelegateCode = `
   CLAuthorizationStatus status = [CLLocationManager authorizationStatus];
 
   if (kCLAuthorizationStatusNotDetermined == status) {
+    if (@available(iOS 13.0, *)) {
+      [self.lm requestWhenInUseAuthorization];
+    } else {
+      [self.lm requestAlwaysAuthorization];
+    }
+  }
+  else if (kCLAuthorizationStatusAuthorizedWhenInUse == status) {
     [self.lm requestAlwaysAuthorization];
   }
   else if (kCLAuthorizationStatusAuthorizedAlways == status) {
@@ -20,14 +27,13 @@ const iOSLocationDelegateCode = `
   if (CLLocationManager.significantLocationChangeMonitoringAvailable) {
     [self.lm startMonitoringSignificantLocationChanges];
   }
-
-  self.nearBee = [NearBee initNearBee];
-  [self.nearBee setDelegate:self];
-  [self.nearBee startScanning];
 }
 
 - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
-  if (kCLAuthorizationStatusAuthorizedAlways == status) {
+  if (kCLAuthorizationStatusAuthorizedWhenInUse == status) {
+    [self.lm requestAlwaysAuthorization];
+  }
+  else if (kCLAuthorizationStatusAuthorizedAlways == status) {
     [self startLocationMonitoring];
   }
   else {
@@ -44,121 +50,18 @@ const iOSLocationDelegateCode = `
     }
   }
 }
-
-#pragma mark - NearBee delegates
-
-- (void)didFindBeacons:(NSArray<NearBeeBeacon *> * _Nonnull)beacons {
-  for (NearBeeBeacon *beacon in beacons) {
-    if (!beacon.eddystoneUID) {
-      continue;
-    }
-
-    NSString *namespace = [beacon.eddystoneUID substringWithRange:NSMakeRange(0, 20)];
-    NSString *instance = [beacon.eddystoneUID substringFromIndex:20];
-    [Kumulos.shared trackEventImmediately:@"k.engage.beaconEnteredProximity"
-                           withProperties:@{
-                                            @"type": @(2),
-                                            @"namespace": namespace,
-                                            @"instance": instance
-                                            }];
-  }
-}
-
-- (void)didLoseBeacons:(NSArray<NearBeeBeacon *> * _Nonnull)beacons {
-  // Noop
-}
-
-- (void)didThrowError:(NSError * _Nonnull)error {
-  NSLog(@"NearBee error: %@", error);
-}
-
-- (void)didUpdateBeacons:(NSArray<NearBeeBeacon *> * _Nonnull)beacons {
-  // Noop
-}
-
-- (void)didUpdateState:(enum NearBeeState)state {
-  // Noop
-}
-`;
-
-const iOSPushDelegateCode = `
-#pragma mark - Push delegates
-- (void) application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
-  if (Kumulos.shared) {
-    [Kumulos.shared pushRegisterWithDeviceToken:deviceToken];
-  }
-  else {
-    NSLog(@"Kumulos.shared was nil didRegisterForRemoteNotificationsWithDeviceToken");
-  }
-}
-
-// iOS9 handler for push notifications
-// iOS9+10 handler for background data pushes (content-available)
-- (void) application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
-  if ([[UIApplication sharedApplication] applicationState] == UIApplicationStateInactive) {
-    [Kumulos.shared pushTrackOpenFromNotification:userInfo];
-
-#ifndef __IPHONE_10_0
-    // Handle opening URLs on notification taps (iOS9)
-    NSString *url = userInfo[@"custom"][@"u"];
-    if (url) {
-      dispatch_async(dispatch_get_main_queue(), ^{
-        [UIApplication.sharedApplication openURL:[NSURL URLWithString:url]];
-      });
-    }
-#endif
-  }
-
-  completionHandler(UIBackgroundFetchResultNoData);
-}
-
-// Called on iOS10 when your app is in the foreground to allow customizing the display of the notification
-- (void) userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions))completionHandler {
-  completionHandler(UNNotificationPresentationOptionAlert);
-}
-
-// iOS10 handler for when a user taps a notification
-#ifdef __IPHONE_11_0
-- (void) userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)(void))completionHandler {
-#else
-- (void) userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)())completionHandler {
-#endif
-  NSDictionary* userInfo = [[[[response notification] request] content] userInfo];
-  [Kumulos.shared pushTrackOpenFromNotification:userInfo];
-
-  // Handle URL pushes
-  NSString *url = userInfo[@"custom"][@"u"];
-  if (url) {
-    if (@available(iOS 10.0, *)) {
-      [UIApplication.sharedApplication openURL:[NSURL URLWithString:url] options:@{} completionHandler:^(BOOL success) {
-        /* noop */
-      }];
-    } else {
-      dispatch_async(dispatch_get_main_queue(), ^{
-        [UIApplication.sharedApplication openURL:[NSURL URLWithString:url]];
-      });
-    }
-  }
-
-  completionHandler();
-}
 `;
 
 module.exports = {
   ios: {
-    podDeps: `
-    pod 'NearBee', '0.2.3'
-`,
     delegateBody: `
 ${iOSLocationDelegateCode}
-${iOSPushDelegateCode}
 `,
     findDelegateLine: `@implementation AppDelegate`,
     replaceDelegateLine: `
-@interface AppDelegate () <UNUserNotificationCenterDelegate, CLLocationManagerDelegate, NearBeeDelegate>
+@interface AppDelegate () <CLLocationManagerDelegate>
 
 @property (nonatomic, strong) CLLocationManager *lm;
-@property (nonatomic, strong) NearBee *nearBee;
 
 @end
 
@@ -167,10 +70,8 @@ ${iOSPushDelegateCode}
     findDidLaunch: `return YES;`,
     delegateImports: `
 @import CoreLocation;
-@import UserNotifications;
-#import "KumulosSDK.h"
-#import <NearBee/NearBee-Swift.h>
-`
+#import <KumulosReactNative/KumulosReactNative.h>
+`,
   },
-  android: {}
+  android: {},
 };

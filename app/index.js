@@ -1,8 +1,13 @@
-import { NativeModules, PermissionsAndroid, Platform } from "react-native";
+import { associateUser, emptyString } from "./utils";
+import { initMiddleware, logoutMiddleware } from "./middleware";
 
 import Kumulos from "kumulos-react-native";
+import { Platform } from "react-native";
+import { createPushOpenedHandler } from "./push";
 import { ext } from "./const";
 import { getExtensionSettings } from "shoutem.application";
+import { getUser } from "shoutem.auth";
+import { setupLocationTrackingAndroid } from "./location";
 
 // Constants `screens` (from extension.js) and `reducer` (from index.js)
 // are exported via named export
@@ -13,51 +18,36 @@ export * from "./extension";
 
 // list of exports supported by shoutem can be found here: https://shoutem.github.io/docs/extensions/reference/extension-exports
 
-function empty(v) {
-  return !v || !v.length;
-}
+export const middleware = [initMiddleware, logoutMiddleware];
 
 export function appDidFinishLaunching(app) {
   const store = app.getStore();
   const state = store.getState();
   const settings = getExtensionSettings(state, ext());
 
-  if (!settings || empty(settings.apiKey) || empty(settings.secretKey)) {
+  if (
+    !settings ||
+    emptyString(settings.apiKey) ||
+    emptyString(settings.secretKey)
+  ) {
     console.warn(
       "No Kumulos API key or secret key configured, skipping initialization!"
     );
     return;
   }
 
+  const pushOpenedHandler = createPushOpenedHandler(store);
+
   Kumulos.initialize({
     apiKey: settings.apiKey,
-    secretKey: settings.secretKey
+    secretKey: settings.secretKey,
+    pushOpenedHandler,
   });
 
   if ("android" === Platform.OS) {
     setupLocationTrackingAndroid();
   }
-}
 
-async function setupLocationTrackingAndroid() {
-  let result;
-  try {
-    result = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      {
-        title: "Location-based Content",
-        message:
-          "This app would like to use your location to enable relevant content and functionality"
-      }
-    );
-  } catch (e) {
-    console.error(e);
-    return;
-  }
-
-  if (PermissionsAndroid.RESULTS.GRANTED !== result) {
-    return;
-  }
-
-  NativeModules.KumulosShoutem.startLocationTracking();
+  const shoutemUser = getUser(state);
+  associateUser(shoutemUser);
 }

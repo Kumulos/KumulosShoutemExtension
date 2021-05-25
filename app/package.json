@@ -1,9 +1,9 @@
 {
   "name": "kumulos.kumulos",
-  "version": "3.0.0",
+  "version": "4.0.4",
   "description": "Official Kumulos integration for the Shoutem platform",
   "dependencies": {
-    "kumulos-react-native": "4.0.0-shoutem1",
+    "kumulos-react-native": "5.4.1",
     "xcode": "^0.8.9",
     "plist": "1.2.0",
     "lodash": "~4.17.4"

@@ -15,12 +15,12 @@ buildscript {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 27
-    buildToolsVersion "23.0.1"
+    compileSdkVersion rootProject.hasProperty('compileSdkVersion') ? rootProject.compileSdkVersion : 29
+    buildToolsVersion rootProject.hasProperty('buildToolsVersion') ? rootProject.buildToolsVersion : "29.0.2"
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 27
+        targetSdkVersion 29
         versionCode 1
         versionName "1.0"
     }
@@ -37,8 +37,6 @@ dependencies {
     implementation 'com.facebook.react:react-native:+'
 
     implementation "com.google.android.gms:play-services-location:$googlePlayServicesVersion"
-    debugImplementation 'com.kumulos.android:kumulos-android-debug:6.1.0'
-    releaseImplementation 'com.kumulos.android:kumulos-android-release:6.1.0'
-
-    implementation 'co.nearbee:nearbeesdk:0.2.1'
+    debugApi 'com.kumulos.android:kumulos-android-debug:9.0.0'
+    releaseApi 'com.kumulos.android:kumulos-android-release:9.0.0'
 }

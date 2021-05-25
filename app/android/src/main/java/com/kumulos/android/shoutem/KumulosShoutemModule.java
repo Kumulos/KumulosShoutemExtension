@@ -3,10 +3,6 @@ package com.kumulos.android.shoutem;
 
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
-import android.text.TextUtils;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -15,13 +11,6 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.kumulos.android.Kumulos;
-
-import java.util.ArrayList;
-
-import co.nearbee.NearBeaconListener;
-import co.nearbee.NearBee;
-import co.nearbee.NearBeeException;
-import co.nearbee.models.NearBeacon;
 
 public class KumulosShoutemModule extends ReactContextBaseJavaModule {
 
@@ -60,66 +49,5 @@ public class KumulosShoutemModule extends ReactContextBaseJavaModule {
         } catch (SecurityException e) {
             e.printStackTrace();
         }
-
-        this.startNearBeeScanning();
-    }
-
-    private void startNearBeeScanning() {
-        if (!this.isNearBeeConfigured()) {
-            return;
-        }
-
-        NearBee.Builder builder = new NearBee.Builder(reactContext);
-        builder.setCallBackInterval(15)
-                .setBackgroundNotificationsEnabled(true);
-        NearBee nearBee = builder.build();
-
-        nearBee.startScanning(new NearBeaconListener() {
-            @Override
-            public void onUpdate(ArrayList<NearBeacon> beaconsInRange) {
-                // Noop
-            }
-
-            @Override
-            public void onBeaconLost(ArrayList<NearBeacon> lostBeacons) {
-                // Noop
-            }
-
-            @Override
-            public void onBeaconFound(ArrayList<NearBeacon> foundBeacons) {
-                for (NearBeacon beacon : foundBeacons) {
-                    String uid = beacon.getEddystoneUID();
-                    String hexNamespace = uid.substring(0, 20);
-                    String hexInstance = uid.substring(20);
-                    Kumulos.trackEddystoneBeaconProximity(reactContext, hexNamespace, hexInstance, null);
-                }
-            }
-
-            @Override
-            public void onError(NearBeeException exception) {
-                exception.printStackTrace();
-            }
-        });
-    }
-
-    private boolean isNearBeeConfigured() {
-        String pkg = this.reactContext.getPackageName();
-
-        ApplicationInfo info = null;
-        try {
-            info = this.reactContext.getPackageManager().getApplicationInfo(pkg, PackageManager.GET_META_DATA);
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
-        }
-
-        Bundle meta = info.metaData;
-        String key = meta.getString("co.nearbee.api_key", "");
-        int org = meta.getInt("co.nearbee.organization_id", -1);
-
-        if (TextUtils.isEmpty(key) || -1 == org) {
-            return false;
-        }
-
-        return true;
     }
 }
